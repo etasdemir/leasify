@@ -81,8 +81,9 @@ export function toYocto(amount: number): u128 {
  */
 export function assert_self(): void {
   const caller = Context.predecessor
+  const sender = Context.sender
   const self = Context.contractName
-  assert(caller == self, "Only this contract may call itself");
+  assert(caller === self && sender === self, "Only this contract may call itself");
 }
 
 export function assert_single_promise_success(): void {

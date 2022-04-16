@@ -1,68 +1,85 @@
-import { storage, Context } from "near-sdk-core"
+import { storage, Context, PersistentMap, PersistentSet } from "near-sdk-core"
+import {AccountId, assert_self} from './utils';
+import { BUILD_TYPE, LESSOR_MAP_PREFIX, LESSE_MAP_PREFIX, ASSET_MAP_PREFIX, ASSET_IDS_PREFIX } from "./Constants";
+import Lessor from "./models/Lessor";
+import Lesse from "./models/Lesse";
+import Asset from "./models/Asset";
 
 @nearBindgen
 export class Contract {
-  private message: string = 'hello world'
+  lessorMap = new PersistentMap<AccountId, Lessor>(LESSOR_MAP_PREFIX);
+  lesseMap = new PersistentMap<AccountId, Lesse>(LESSE_MAP_PREFIX);
+  assetMap = new PersistentMap<string, Asset>(ASSET_MAP_PREFIX);
+  assetIds = new PersistentSet<string>(ASSET_IDS_PREFIX);
 
-  // return the string 'hello world'
-  helloWorld(): string {
-    return this.message
-  }
-
-  // read the given key from account (contract) storage
-  read(key: string): string {
-    if (isKeyInStorage(key)) {
-      return `✅ Key [ ${key} ] has value [ ${storage.getString(key)!} ] and "this.message" is [ ${this.message} ]`
-    } else {
-      return `🚫 Key [ ${key} ] not found in storage. ( ${this.storageReport()} )`
+  constructor() {
+    if (BUILD_TYPE === "DEV") {
+      this.generateAssets();
     }
   }
 
+  getBuyableAssets() {
+    // return this.contractAssets.filter((asset) => !asset.isOwned)
+  }
+  
+  getLeasebleAssets() {
+    // return this.contractAssets.filter((asset) => !asset.isLeased)
+  }
+
   /**
-  write the given value at the given key to account (contract) storage
-  ---
-  note: this is what account storage will look like AFTER the write() method is called the first time
-  ╔════════════════════════════════╤══════════════════════════════════════════════════════════════════════════════════╗
-  ║                            key │ value                                                                            ║
-  ╟────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────╢
-  ║                          STATE │ {                                                                                ║
-  ║                                │   "message": "data was saved"                                                    ║
-  ║                                │ }                                                                                ║
-  ╟────────────────────────────────┼──────────────────────────────────────────────────────────────────────────────────╢
-  ║                       some-key │ some value                                                                       ║
-  ╚════════════════════════════════╧══════════════════════════════════════════════════════════════════════════════════╝
+   * Lessor methods
    */
-  @mutateState()
-  write(key: string, value: string): string {
-    storage.set(key, value)
-    this.message = 'data was saved' // this is why we need the deorator @mutateState() above the method name
-    return `✅ Data saved. ( ${this.storageReport()} )`
+
+  buyAsset(assetId: string) {
+    const lessor = this.getLessor();
   }
 
-
-  // private helper method used by read() and write() above
-  private storageReport(): string {
-    return `storage [ ${Context.storageUsage} bytes ]`
+  getAccumulatedIncome() {
+    const lessor = this.getLessor();
   }
-}
 
-/**
- * This function exists only to avoid a compiler error
- *
+  getOwnedAssets() {
+    const lessor = this.getLessor();
+  }
 
-ERROR TS2339: Property 'contains' does not exist on type 'src/singleton/assembly/index/Contract'.
+	transferAccumulatedIncome() {
+    const lessor = this.getLessor();
+  }
 
-     return this.contains(key);
-                 ~~~~~~~~
- in ~lib/near-sdk-core/storage.ts(119,17)
+	sellAsset(assetId: string) {
+    const lessor = this.getLessor();
+  }
 
-/Users/sherif/Documents/code/near/_projects/edu.t3/starter--near-sdk-as/node_modules/asbuild/dist/main.js:6
-        throw err;
-        ^
+  /**
+   * Lesse methods
+   */
 
- * @param key string key in account storage
- * @returns boolean indicating whether key exists
- */
-function isKeyInStorage(key: string): bool {
-  return storage.hasKey(key)
+  payLease(assetId: string) {
+    const lesse = this.getLesse();
+  }
+
+  getLeasedAssets() {
+    const lesse = this.getLesse();
+  }
+
+  releaseAsset(assetId: string) {
+    const lesse = this.getLesse();
+  }
+
+  private getLessor(): Lessor {
+    const sender: AccountId = Context.sender;
+    const lessor: Lessor = this.lessorMap.getSome(sender);
+    return lessor;
+  }
+
+  private getLesse(): Lesse {
+    const sender: AccountId = Context.sender;
+    const lesse: Lesse = this.lesseMap.getSome(sender);
+    return lesse;
+  }
+
+  private generateAssets() {
+    assert_self();
+
+  }
 }
