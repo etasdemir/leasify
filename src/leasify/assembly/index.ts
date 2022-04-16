@@ -18,12 +18,26 @@ export class Contract {
     }
   }
 
-  getBuyableAssets() {
-    // return this.contractAssets.filter((asset) => !asset.isOwned)
+  getBuyableAssets(): Array<Asset> {
+    let assets = new Array<Asset>;
+    this.assetIds.values().forEach((id) => {
+      let asset = this.assetMap.getSome(id)
+      if (!asset.isOwned) {
+        assets.push(asset);
+      }
+    })
+    return assets;
   }
   
-  getLeasebleAssets() {
-    // return this.contractAssets.filter((asset) => !asset.isLeased)
+  getLeasebleAssets(): Array<Asset> {
+    let assets = new Array<Asset>;
+    this.assetIds.values().forEach((id) => {
+      let asset = this.assetMap.getSome(id)
+      if (!asset.isLeased) {
+        assets.push(asset);
+      }
+    })
+    return assets;
   }
 
   /**
@@ -32,6 +46,7 @@ export class Contract {
 
   buyAsset(assetId: string) {
     const lessor = this.getLessor();
+    const asset = this.getAssetById(assetId);
   }
 
   getAccumulatedIncome() {
@@ -48,6 +63,7 @@ export class Contract {
 
 	sellAsset(assetId: string) {
     const lessor = this.getLessor();
+    const asset = this.getAssetById(assetId);
   }
 
   /**
@@ -56,6 +72,7 @@ export class Contract {
 
   payLease(assetId: string) {
     const lesse = this.getLesse();
+    const asset = this.getAssetById(assetId);
   }
 
   getLeasedAssets() {
@@ -64,18 +81,25 @@ export class Contract {
 
   releaseAsset(assetId: string) {
     const lesse = this.getLesse();
+    const asset = this.getAssetById(assetId);
   }
 
   private getLessor(): Lessor {
     const sender: AccountId = Context.sender;
     const lessor: Lessor = this.lessorMap.getSome(sender);
+    assert(lessor.id === sender, "Incorrect caller or it is not a lessor")
     return lessor;
   }
 
   private getLesse(): Lesse {
     const sender: AccountId = Context.sender;
     const lesse: Lesse = this.lesseMap.getSome(sender);
+    assert(lesse.id === sender, "Incorrect caller or it is not a lesse")
     return lesse;
+  }
+
+  private getAssetById(assetId: string): Asset {
+    return this.assetMap.getSome(assetId);
   }
 
   private generateAssets() {

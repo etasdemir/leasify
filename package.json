@@ -8,12 +8,19 @@
     "clean": "rm -rf ./build && rm -rf ./neardev",
     "build": "asb --target debug",
     "build:release": "asb",
-    "asp": "asp --verbose --nologo"
+    "asp": "asp --verbose --nologo",
+    "lint": "eslint . --ext .ts"
   },
   "keywords": [],
   "author": "https://github.com/etasdemir",
   "license": "Apache-2",
   "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^5.19.0",
+    "@typescript-eslint/parser": "^5.19.0",
+    "eslint": "^8.13.0"
+  },
+  "dependencies": {
+    "typescript": "^4.6.3",
     "near-sdk-as": "^3.2.3"
   }
 }
