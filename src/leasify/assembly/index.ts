@@ -1,7 +1,6 @@
-import {v4 as uuidv4} from 'uuid';
 import { Context, PersistentMap, PersistentSet } from "near-sdk-core"
 import { ContractPromiseBatch, u128 } from 'near-sdk-as';
-import {AccountId, assert_self, Balance, Money, toYocto} from './utils';
+import {AccountId, assert_self, Balance, makeid, Money, toYocto} from './utils';
 import { BUILD_TYPE, LESSOR_MAP_PREFIX, LESSE_MAP_PREFIX, ASSET_MAP_PREFIX, ASSET_IDS_PREFIX } from "./Constants";
 import Lessor from "./models/Lessor";
 import Lesse from "./models/Lesse";
@@ -9,10 +8,10 @@ import Asset from "./models/Asset";
 
 @nearBindgen
 export class Contract {
-  lessorMap = new PersistentMap<AccountId, Lessor>(LESSOR_MAP_PREFIX);
-  lesseMap = new PersistentMap<AccountId, Lesse>(LESSE_MAP_PREFIX);
-  assetMap = new PersistentMap<string, Asset>(ASSET_MAP_PREFIX);
-  assetIds = new PersistentSet<string>(ASSET_IDS_PREFIX);
+  lessorMap: PersistentMap<AccountId, Lessor> = new PersistentMap(LESSOR_MAP_PREFIX);
+  lesseMap: PersistentMap<AccountId, Lesse> = new PersistentMap(LESSE_MAP_PREFIX);
+  assetMap: PersistentMap<string, Asset> = new PersistentMap(ASSET_MAP_PREFIX);
+  assetIds: PersistentSet<string> = new PersistentSet(ASSET_IDS_PREFIX);
 
   constructor() {
     this.generateMockAssets();
@@ -197,7 +196,7 @@ export class Contract {
     assert(BUILD_TYPE === "DEV", "generateAssets method can be called only in development environment");
     assert_self();
     for (let i = 0; i < 50; i++) {
-      const id = uuidv4();
+      const id = makeid(20);
       const price = toYocto(Math.random() / 10);
       const leasePrice = u128.div(price, u128.from(30));
       const periodicIncome = leasePrice;
