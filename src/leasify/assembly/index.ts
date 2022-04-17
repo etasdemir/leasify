@@ -140,6 +140,7 @@ export class Contract {
     asset.leaseAsset(lesse.id);
     this.assetMap.set(assetId, asset);
     lesse.depositBalance = u128.add(lesse.depositBalance, asset.depositAmount);
+    lesse.addAsset(assetId);
     this.lesseMap.set(lesse.id, lesse);
     return true;
   }
