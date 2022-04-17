@@ -1,6 +1,7 @@
+import {v4 as uuidv4} from 'uuid';
 import { Context, PersistentMap, PersistentSet } from "near-sdk-core"
 import { ContractPromiseBatch, u128 } from 'near-sdk-as';
-import {AccountId, assert_self, Balance, Money} from './utils';
+import {AccountId, assert_self, Balance, Money, toYocto} from './utils';
 import { BUILD_TYPE, LESSOR_MAP_PREFIX, LESSE_MAP_PREFIX, ASSET_MAP_PREFIX, ASSET_IDS_PREFIX } from "./Constants";
 import Lessor from "./models/Lessor";
 import Lesse from "./models/Lesse";
@@ -14,7 +15,7 @@ export class Contract {
   assetIds = new PersistentSet<string>(ASSET_IDS_PREFIX);
 
   constructor() {
-    this.generateAssets();
+    this.generateMockAssets();
   }
 
   getBuyableAssets(): Array<Asset> {
@@ -192,9 +193,18 @@ export class Contract {
     return asset!;
   }
 
-  private generateAssets(): void {
+  private generateMockAssets(): void {
     assert(BUILD_TYPE === "DEV", "generateAssets method can be called only in development environment");
     assert_self();
-    
+    for (let i = 0; i < 50; i++) {
+      const id = uuidv4();
+      const price = toYocto(Math.random() / 10);
+      const leasePrice = u128.div(price, u128.from(30));
+      const periodicIncome = leasePrice;
+      const deposit = u128.mul(leasePrice, u128.from(6));
+      const asset = new Asset(id, price, leasePrice, periodicIncome, deposit);
+      this.assetIds.add(id);
+      this.assetMap.set(id, asset);
+    }
   }
 }
