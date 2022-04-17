@@ -8,34 +8,36 @@ import Asset from "./models/Asset";
 
 @nearBindgen
 export class Contract {
-  lessorMap: PersistentMap<AccountId, Lessor> = new PersistentMap(LESSOR_MAP_PREFIX);
-  lesseMap: PersistentMap<AccountId, Lesse> = new PersistentMap(LESSE_MAP_PREFIX);
-  assetMap: PersistentMap<string, Asset> = new PersistentMap(ASSET_MAP_PREFIX);
-  assetIds: PersistentSet<string> = new PersistentSet(ASSET_IDS_PREFIX);
+  private lessorMap: PersistentMap<AccountId, Lessor> = new PersistentMap(LESSOR_MAP_PREFIX);
+  private lesseMap: PersistentMap<AccountId, Lesse> = new PersistentMap(LESSE_MAP_PREFIX);
+  private assetMap: PersistentMap<string, Asset> = new PersistentMap(ASSET_MAP_PREFIX);
+  private assetIds: PersistentSet<string> = new PersistentSet(ASSET_IDS_PREFIX);
 
   constructor() {
     this.generateMockAssets();
   }
 
   getBuyableAssets(): Array<Asset> {
-    const assets = new Array<Asset>();
-    this.assetIds.values().forEach((id) => {
-      const asset = this.getAssetById(id);
+    const assets: Array<Asset> = new Array<Asset>();
+    const assetIds: string[] = this.assetIds.values();
+    for (let i = 0; i < assetIds.length; i++) {
+      const asset: Asset = this.getAssetById(assetIds[i]);
       if (!asset.ownedBy) {
         assets.push(asset);
       }
-    })
+    }
     return assets;
   }
-  
+
   getLeasebleAssets(): Array<Asset> {
-    const assets = new Array<Asset>();
-    this.assetIds.values().forEach((id) => {
-      const asset = this.getAssetById(id);
+    const assets: Array<Asset> = new Array<Asset>();
+    const assetIds: string[] = this.assetIds.values();
+    for (let i = 0; i < assetIds.length; i++) {
+      const asset: Asset = this.getAssetById(assetIds[i]);
       if (!asset.leasedBy) {
         assets.push(asset);
       }
-    })
+    }
     return assets;
   }
 
@@ -45,7 +47,7 @@ export class Contract {
 
   @mutateState()
   buyAsset(assetId: string): void {
-    const asset = this.getAssetById(assetId);
+    const asset: Asset = this.getAssetById(assetId);
     assert(!asset.isOwned(), 'Asset already owned.');
     const sender = Context.sender;
     const contract = Context.contractName;
@@ -66,12 +68,14 @@ export class Contract {
     const sender = Context.sender;
     const lessor = this.getLessor(sender);
     const ownedAssets = new Array<Asset>();
-    lessor.ownedAssetIds.values().forEach((assetId) => {
+    const assetIds = lessor.ownedAssetIds.values();
+    for (let index = 0; index < assetIds.length; index++) {
+      const assetId = assetIds[index];
       const asset = this.getAssetById(assetId);
       if (asset.ownedBy === lessor.id) {
         ownedAssets.push(asset);
       }
-    })
+    }
     return ownedAssets;
   }
 
@@ -137,12 +141,14 @@ export class Contract {
     const sender = Context.sender;
     const lesse = this.getLesse(sender);
     const leasedAssets = new Array<Asset>();
-    lesse.leasedAssetIds.values().forEach((assetId) => {
+    const leasedAssetIds = lesse.leasedAssetIds.values();
+    for (let index = 0; index < leasedAssetIds.length; index++) {
+      const assetId = leasedAssetIds[index];
       const asset = this.getAssetById(assetId);
       if (asset.leasedBy === lesse.id) {
         leasedAssets.push(asset);
       }
-    })
+    }
     return leasedAssets;
   }
 
