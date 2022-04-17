@@ -1,5 +1,5 @@
 import { u128 } from 'near-sdk-as';
-import {Balance} from '../utils';
+import {Balance, Money} from '../utils';
 
 @nearBindgen
 export default class Lessor {
@@ -9,17 +9,19 @@ export default class Lessor {
 
     constructor(id: string) {
         this.id = id;
-        this.accumulatedIncome = u128.from(0);
+        this.accumulatedIncome = u128.Zero;
         this.ownedAssetIds = new Set<string>();
     }
 
-    addAsset(assetId: string): Lessor {
-        this.ownedAssetIds.add(assetId);
-        return this;
+    transferAccumulatedIncome(amount: Money) {
+        this.accumulatedIncome = u128.sub(this.accumulatedIncome, amount);
     }
 
-    removeAsset(assetId: string): Lessor {
+    addAsset(assetId: string) {
+        this.ownedAssetIds.add(assetId);
+    }
+
+    removeAsset(assetId: string) {
         this.ownedAssetIds.delete(assetId);
-        return this;
     }
 }

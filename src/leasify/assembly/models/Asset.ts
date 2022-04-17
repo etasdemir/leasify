@@ -24,4 +24,29 @@ export default class Asset {
         this.ownedBy = '';
         this.leasedBy = '';
     }
+
+    isLeased(): bool {
+        return this.leasedBy !== '';
+    }
+
+    isOwned(): bool {
+        return this.ownedBy !== '';
+    }
+
+    buyAsset(owner: string) {
+        this.ownedBy = owner;
+    }
+
+    sellAsset() {
+        this.ownedBy = '';
+    }
+
+    leaseAsset(lesse: string) {
+        this.leasedBy = lesse;
+    }
+
+    releaseAsset() {
+        this.leasedBy = '';
+    }
+
 }
