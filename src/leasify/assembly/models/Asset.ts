@@ -1,8 +1,13 @@
-import { Money } from "../utils"
+import { Money, AccountId } from "../utils"
+
+@nearBindgen
 export default class Asset {
     id: string
     price: Money
     leasePrice: Money
-    isOwned: bool
-    isLeased: bool
+    leasePayPeriodInSec: i64
+    periodicIncome: Money
+    depositAmount: Money
+    ownedBy: AccountId
+    leasedBy: AccountId
 }
