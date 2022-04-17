@@ -2,7 +2,7 @@ import { u128 } from 'near-sdk-as';
 import {Balance, Money} from '../utils';
 
 @nearBindgen
-export default class Lessor {
+export class Lessor {
     id: string
 	accumulatedIncome: Balance
 	ownedAssetIds: Set<string>

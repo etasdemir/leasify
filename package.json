@@ -9,7 +9,8 @@
     "build": "asb --target debug",
     "build:release": "asb",
     "asp": "asp --verbose --nologo",
-    "lint": "eslint . --ext .ts"
+    "lint": "eslint . --ext .ts",
+    "dev-deploy": "yarn build:release && near dev-deploy ./build/release/leasify.wasm"
   },
   "keywords": [],
   "author": "https://github.com/etasdemir",

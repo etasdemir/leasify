@@ -1,7 +1,7 @@
 import { Money, AccountId } from "../utils"
 
 @nearBindgen
-export default class Asset {
+export class Asset {
     id: string
     price: Money
     leasePrice: Money
@@ -21,11 +21,11 @@ export default class Asset {
     }
 
     isLeased(): bool {
-        return this.leasedBy !== '';
+        return this.leasedBy != '';
     }
 
     isOwned(): bool {
-        return this.ownedBy !== '';
+        return this.ownedBy != '';
     }
 
     buyAsset(owner: string): void {
@@ -43,5 +43,4 @@ export default class Asset {
     releaseAsset(): void {
         this.leasedBy = '';
     }
-
 }

@@ -1,10 +1,10 @@
-import { Context, PersistentMap, PersistentSet } from "near-sdk-core"
-import { ContractPromiseBatch, u128 } from 'near-sdk-as';
-import {AccountId, assert_self, Balance, makeid, Money, toYocto} from './utils';
+import { Context, math, PersistentMap, PersistentSet } from "near-sdk-core"
+import { ContractPromiseBatch, u128, logging, RNG } from 'near-sdk-as';
+import {AccountId, assert_self, Balance, Money, toYocto} from './utils';
 import { BUILD_TYPE, LESSOR_MAP_PREFIX, LESSE_MAP_PREFIX, ASSET_MAP_PREFIX, ASSET_IDS_PREFIX } from "./Constants";
-import Lessor from "./models/Lessor";
-import Lesse from "./models/Lesse";
-import Asset from "./models/Asset";
+import {Lessor} from "./models/Lessor";
+import {Lesse} from "./models/Lesse";
+import {Asset} from "./models/Asset";
 
 @nearBindgen
 export class Contract {
@@ -13,8 +13,24 @@ export class Contract {
   private assetMap: PersistentMap<string, Asset> = new PersistentMap(ASSET_MAP_PREFIX);
   private assetIds: PersistentSet<string> = new PersistentSet(ASSET_IDS_PREFIX);
 
-  constructor() {
-    this.generateMockAssets();
+  // near call $contract generateMockAssets --accountId $account --gas=300000000000000 
+  @mutateState()
+  generateMockAssets(): string {
+    assert(BUILD_TYPE === "DEV", "generateAssets method can be called only in development environment");
+    const MOCK_ASSET_COUNT = 20;
+    const rng = new RNG<u32>(MOCK_ASSET_COUNT * 4, 1000);
+    // assert_self();
+    for (let i = 0; i < MOCK_ASSET_COUNT; i++) {
+      const id = math.hash32<u32>(rng.next()).toString();
+      const price = u128.div(toYocto(rng.next()), u128.from(1000));
+      const leasePrice = u128.div(price, u128.from(30));
+      const periodicIncome = leasePrice;
+      const deposit = u128.mul(leasePrice, u128.from(6));
+      const asset = new Asset(id, price, leasePrice, periodicIncome, deposit);
+      this.assetIds.add(id);
+      this.assetMap.set(id, asset);
+    }
+    return 'Mock assets are generated.';
   }
 
   getBuyableAssets(): Array<Asset> {
@@ -46,16 +62,19 @@ export class Contract {
    */
 
   @mutateState()
-  buyAsset(assetId: string): void {
+  buyAsset(assetId: string): bool {
     const asset: Asset = this.getAssetById(assetId);
     assert(!asset.isOwned(), 'Asset already owned.');
     const sender = Context.sender;
     const contract = Context.contractName;
     const buy_asset = ContractPromiseBatch.create(contract);
     buy_asset.transfer(asset.price);
-    this.lessorMap.set(sender, this.getLessorOrCreate(sender));
     asset.buyAsset(sender);
     this.assetMap.set(assetId, asset);
+    const lessor = this.getLessorOrCreate(sender);
+    lessor.addAsset(asset.id);
+    this.lessorMap.set(sender, lessor);
+    return true;
   }
 
   getAccumulatedIncome(): Balance {
@@ -72,7 +91,7 @@ export class Contract {
     for (let index = 0; index < assetIds.length; index++) {
       const assetId = assetIds[index];
       const asset = this.getAssetById(assetId);
-      if (asset.ownedBy === lessor.id) {
+      if (asset.ownedBy == lessor.id) {
         ownedAssets.push(asset);
       }
     }
@@ -80,7 +99,7 @@ export class Contract {
   }
 
   @mutateState()
-	transferAccumulatedIncome(amount: Money): void {
+	transferAccumulatedIncome(amount: Money): bool {
     const sender = Context.sender;
     const lessor = this.getLessor(sender);
     assert(lessor.accumulatedIncome > u128.Zero, "Accumulated amount can not be less than or equal to 0");
@@ -90,10 +109,11 @@ export class Contract {
     transferIncome.transfer(amount);
     lessor.transferAccumulatedIncome(amount);
     this.lessorMap.set(sender, lessor);
+    return true;
   }
 
   @mutateState()
-	sellAsset(assetId: string): void {
+	sellAsset(assetId: string): bool {
     const sender = Context.sender;
     const lessor = this.getLessor(sender);
     const asset = this.getAssetById(assetId);
@@ -103,15 +123,16 @@ export class Contract {
     this.assetMap.set(assetId, asset);
     lessor.removeAsset(assetId);
     this.lessorMap.set(lessor.id, lessor);
+    return true;
   }
 
   /**
    * Lesse methods
    */
-
-  leaseAsset(assetId: string): void {
+   @mutateState()
+  leaseAsset(assetId: string): bool {
     const asset = this.getAssetById(assetId);
-    assert(asset.isLeased(), "Asset already leased");
+    assert(!asset.isLeased(), "Asset already leased");
     const sender = Context.sender;
     const lesse = this.getLesseOrCreate(sender)
     const lease_asset = ContractPromiseBatch.create(Context.contractName);
@@ -120,10 +141,11 @@ export class Contract {
     this.assetMap.set(assetId, asset);
     lesse.depositBalance = u128.add(lesse.depositBalance, asset.depositAmount);
     this.lesseMap.set(lesse.id, lesse);
+    return true;
   }
 
   @mutateState()
-  payLease(assetId: string): void {
+  payLease(assetId: string): bool {
     const sender = Context.sender;
     const lesse = this.getLesse(sender);
     const asset = this.getAssetById(assetId);
@@ -135,6 +157,7 @@ export class Contract {
       lessor.accumulatedIncome = u128.add(lessor.accumulatedIncome, asset.leasePrice);
       this.lessorMap.set(lessor.id, lessor);
     }
+    return true;
   }
 
   getLeasedAssets(): Array<Asset> {
@@ -145,7 +168,7 @@ export class Contract {
     for (let index = 0; index < leasedAssetIds.length; index++) {
       const assetId = leasedAssetIds[index];
       const asset = this.getAssetById(assetId);
-      if (asset.leasedBy === lesse.id) {
+      if (asset.leasedBy == lesse.id) {
         leasedAssets.push(asset);
       }
     }
@@ -153,7 +176,7 @@ export class Contract {
   }
 
   @mutateState()
-  releaseAsset(assetId: string): void {
+  releaseAsset(assetId: string): bool {
     const sender = Context.sender;
     const lesse = this.getLesse(sender);
     const asset = this.getAssetById(assetId);
@@ -164,16 +187,17 @@ export class Contract {
     this.lesseMap.set(lesse.id, lesse);
     asset.releaseAsset();
     this.assetMap.set(asset.id, asset);
+    return true;
   }
 
   /**
    * Helper methods
    */
 
-  private getLessor(sender: AccountId): Lessor {
+  getLessor(sender: AccountId): Lessor {
     const lessor = this.lessorMap.get(sender, null);
-    assert(lessor !== null, "Lessor not found.");
-    assert(lessor!.id === sender, "Incorrect caller or it is not a lessor")
+    assert(lessor != null, "Lessor not found.");
+    assert(lessor!.id == sender, "Incorrect caller or it is not a lessor")
     return lessor!;
   }
 
@@ -181,10 +205,10 @@ export class Contract {
     return this.lessorMap.get(sender, new Lessor(sender))!;
   }
 
-  private getLesse(sender: AccountId): Lesse {
+  getLesse(sender: AccountId): Lesse {
     const lesse = this.lesseMap.get(sender, null);
-    assert(lesse !== null, "Lesse not found.");
-    assert(lesse!.id === sender, "Incorrect caller or it is not a lesse")
+    assert(lesse != null, "Lesse not found.");
+    assert(lesse!.id == sender, "Incorrect caller or it is not a lesse")
     return lesse!;
   }
 
@@ -192,24 +216,9 @@ export class Contract {
     return this.lesseMap.get(sender, new Lesse(sender))!;
   }
 
-  private getAssetById(assetId: string): Asset {
+  getAssetById(assetId: string): Asset {
     const asset = this.assetMap.get(assetId, null);
-    assert(asset !== null, `Asset not found with id: ${assetId}`);
+    assert(asset != null, `Asset not found with id: ${assetId}`);
     return asset!;
-  }
-
-  private generateMockAssets(): void {
-    assert(BUILD_TYPE === "DEV", "generateAssets method can be called only in development environment");
-    assert_self();
-    for (let i = 0; i < 50; i++) {
-      const id = makeid(20);
-      const price = toYocto(Math.random() / 10);
-      const leasePrice = u128.div(price, u128.from(30));
-      const periodicIncome = leasePrice;
-      const deposit = u128.mul(leasePrice, u128.from(6));
-      const asset = new Asset(id, price, leasePrice, periodicIncome, deposit);
-      this.assetIds.add(id);
-      this.assetMap.set(id, asset);
-    }
   }
 }

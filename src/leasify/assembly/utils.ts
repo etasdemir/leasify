@@ -41,7 +41,7 @@ export type Timestamp = u64;
  */
 
 export const ONE_NEAR = u128.from("1000000000000000000000000");
-export const XCC_GAS: Gas = 20_000_000_000_000;
+export const XCC_GAS: Gas = 50_000_000_000_000;
 export const MIN_ACCOUNT_BALANCE: u128 = u128.mul(ONE_NEAR, u128.from(3));
 
 /**
@@ -90,15 +90,4 @@ export function assert_single_promise_success(): void {
   const x = ContractPromise.getResults()
   assert(x.length == 1, "Expected exactly one promise result")
   assert(x[0].succeeded, "Expected PromiseStatus to be successful")
-}
-
-
-export function makeid(length: number): string {
-  let result = '';
-  const characters = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
-  const charactersLength = characters.length;
-  for ( let i = 0; i < length; i++ ) {
-    result += characters.charAt(Math.floor(Math.random() * charactersLength) as i32);
-  }
-  return result;
 }
