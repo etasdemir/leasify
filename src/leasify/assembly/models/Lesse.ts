@@ -13,11 +13,11 @@ export default class Lesse {
         this.leasedAssetIds = new Set<string>();
     }
 
-    addAsset(assetId: string){
+    addAsset(assetId: string): void {
         this.leasedAssetIds.add(assetId);
     }
 
-    removeAsset(assetId: string, depositAmount: Amount) {
+    removeAsset(assetId: string, depositAmount: Amount): void {
         this.leasedAssetIds.delete(assetId);
         this.depositBalance = u128.sub(this.depositBalance, depositAmount);
     }

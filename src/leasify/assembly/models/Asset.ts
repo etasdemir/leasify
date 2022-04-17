@@ -33,19 +33,19 @@ export default class Asset {
         return this.ownedBy !== '';
     }
 
-    buyAsset(owner: string) {
+    buyAsset(owner: string): void {
         this.ownedBy = owner;
     }
 
-    sellAsset() {
+    sellAsset(): void {
         this.ownedBy = '';
     }
 
-    leaseAsset(lesse: string) {
+    leaseAsset(lesse: string): void {
         this.leasedBy = lesse;
     }
 
-    releaseAsset() {
+    releaseAsset(): void {
         this.leasedBy = '';
     }
 

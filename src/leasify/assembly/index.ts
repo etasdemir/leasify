@@ -1,6 +1,6 @@
-import { storage, Context, PersistentMap, PersistentSet } from "near-sdk-core"
+import { Context, PersistentMap, PersistentSet } from "near-sdk-core"
 import { ContractPromiseBatch, u128 } from 'near-sdk-as';
-import {AccountId, assert_self, Balance, Money, XCC_GAS} from './utils';
+import {AccountId, assert_self, Balance, Money} from './utils';
 import { BUILD_TYPE, LESSOR_MAP_PREFIX, LESSE_MAP_PREFIX, ASSET_MAP_PREFIX, ASSET_IDS_PREFIX } from "./Constants";
 import Lessor from "./models/Lessor";
 import Lesse from "./models/Lesse";
@@ -44,7 +44,7 @@ export class Contract {
    */
 
   @mutateState()
-  buyAsset(assetId: string) {
+  buyAsset(assetId: string): void {
     const asset = this.getAssetById(assetId);
     assert(!asset.isOwned(), 'Asset already owned.');
     const sender = Context.sender;
@@ -62,7 +62,7 @@ export class Contract {
     return lessor.accumulatedIncome;
   }
 
-  getOwnedAssets() {
+  getOwnedAssets(): Array<Asset> {
     const sender = Context.sender;
     const lessor = this.getLessor(sender);
     const ownedAssets = new Array<Asset>();
@@ -76,7 +76,7 @@ export class Contract {
   }
 
   @mutateState()
-	transferAccumulatedIncome(amount: Money) {
+	transferAccumulatedIncome(amount: Money): void {
     const sender = Context.sender;
     const lessor = this.getLessor(sender);
     assert(lessor.accumulatedIncome > u128.Zero, "Accumulated amount can not be less than or equal to 0");
@@ -89,7 +89,7 @@ export class Contract {
   }
 
   @mutateState()
-	sellAsset(assetId: string) {
+	sellAsset(assetId: string): void {
     const sender = Context.sender;
     const lessor = this.getLessor(sender);
     const asset = this.getAssetById(assetId);
@@ -105,7 +105,7 @@ export class Contract {
    * Lesse methods
    */
 
-  leaseAsset(assetId: string) {
+  leaseAsset(assetId: string): void {
     const asset = this.getAssetById(assetId);
     assert(asset.isLeased(), "Asset already leased");
     const sender = Context.sender;
@@ -119,7 +119,7 @@ export class Contract {
   }
 
   @mutateState()
-  payLease(assetId: string) {
+  payLease(assetId: string): void {
     const sender = Context.sender;
     const lesse = this.getLesse(sender);
     const asset = this.getAssetById(assetId);
@@ -147,9 +147,9 @@ export class Contract {
   }
 
   @mutateState()
-  releaseAsset(assetId: string) {
+  releaseAsset(assetId: string): void {
     const sender = Context.sender;
-    let lesse = this.getLesse(sender);
+    const lesse = this.getLesse(sender);
     const asset = this.getAssetById(assetId);
     assert(lesse.depositBalance >= asset.depositAmount, "Insufficient deposit balance.");
     const transferDeposit = ContractPromiseBatch.create(lesse.id);
@@ -192,7 +192,7 @@ export class Contract {
     return asset!;
   }
 
-  private generateAssets() {
+  private generateAssets(): void {
     assert(BUILD_TYPE === "DEV", "generateAssets method can be called only in development environment");
     assert_self();
     

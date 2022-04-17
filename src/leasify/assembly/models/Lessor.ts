@@ -13,15 +13,15 @@ export default class Lessor {
         this.ownedAssetIds = new Set<string>();
     }
 
-    transferAccumulatedIncome(amount: Money) {
+    transferAccumulatedIncome(amount: Money): void {
         this.accumulatedIncome = u128.sub(this.accumulatedIncome, amount);
     }
 
-    addAsset(assetId: string) {
+    addAsset(assetId: string): void {
         this.ownedAssetIds.add(assetId);
     }
 
-    removeAsset(assetId: string) {
+    removeAsset(assetId: string): void {
         this.ownedAssetIds.delete(assetId);
     }
 }
