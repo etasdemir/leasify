@@ -14,9 +14,7 @@ export class Contract {
   assetIds = new PersistentSet<string>(ASSET_IDS_PREFIX);
 
   constructor() {
-    if (BUILD_TYPE === "DEV") {
-      this.generateAssets();
-    }
+    this.generateAssets();
   }
 
   getBuyableAssets(): Array<Asset> {
@@ -137,7 +135,8 @@ export class Contract {
   }
 
   private generateAssets() {
+    assert(BUILD_TYPE === "DEV", "generateAssets method can be called only in development environment");
     assert_self();
-
+    
   }
 }
