@@ -17,9 +17,10 @@ export class Contract {
   @mutateState()
   generateMockAssets(): string {
     assert(BUILD_TYPE === "DEV", "generateAssets method can be called only in development environment");
-    const MOCK_ASSET_COUNT = 20;
-    const rng = new RNG<u32>(MOCK_ASSET_COUNT * 4, 1000);
     // assert_self();
+    const MOCK_ASSET_COUNT = 20;
+    assert(this.assetIds.size < MOCK_ASSET_COUNT, "Mock assests already created");
+    const rng = new RNG<u32>(MOCK_ASSET_COUNT * 4, 1000);
     for (let i = 0; i < MOCK_ASSET_COUNT; i++) {
       const id = math.hash32<u32>(rng.next()).toString();
       const price = u128.div(toYocto(rng.next()), u128.from(1000));
