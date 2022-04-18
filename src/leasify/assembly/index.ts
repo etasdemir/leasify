@@ -58,6 +58,12 @@ export class Contract {
     return assets;
   }
 
+  getAssetById(assetId: string): Asset {
+    const asset = this.assetMap.get(assetId, null);
+    assert(asset != null, `Asset not found with id: ${assetId}`);
+    return asset!;
+  }
+
   /**
    * Lessor methods
    */
@@ -130,6 +136,17 @@ export class Contract {
     return true;
   }
 
+  getLessor(sender: AccountId): Lessor {
+    const lessor = this.lessorMap.get(sender, null);
+    assert(lessor != null, "Lessor not found.");
+    assert(lessor!.id == sender, "Incorrect caller or it is not a lessor")
+    return lessor!;
+  }
+
+  private getLessorOrCreate(sender: AccountId): Lessor {
+    return this.lessorMap.get(sender, new Lessor(sender))!;
+  }
+
   /**
    * Lessee methods
    */
@@ -198,21 +215,6 @@ export class Contract {
     return true;
   }
 
-  /**
-   * Helper methods
-   */
-
-  getLessor(sender: AccountId): Lessor {
-    const lessor = this.lessorMap.get(sender, null);
-    assert(lessor != null, "Lessor not found.");
-    assert(lessor!.id == sender, "Incorrect caller or it is not a lessor")
-    return lessor!;
-  }
-
-  private getLessorOrCreate(sender: AccountId): Lessor {
-    return this.lessorMap.get(sender, new Lessor(sender))!;
-  }
-
   getLessee(sender: AccountId): Lessee {
     const lessee = this.lesseeMap.get(sender, null);
     assert(lessee != null, "Lessee not found.");
@@ -222,11 +224,5 @@ export class Contract {
 
   private getLesseeOrCreate(sender: AccountId): Lessee {
     return this.lesseeMap.get(sender, new Lessee(sender))!;
-  }
-
-  getAssetById(assetId: string): Asset {
-    const asset = this.assetMap.get(assetId, null);
-    assert(asset != null, `Asset not found with id: ${assetId}`);
-    return asset!;
   }
 }
